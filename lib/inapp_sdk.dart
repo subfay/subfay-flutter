@@ -120,7 +120,7 @@ class InAppSDK {
   Future<List<String>> _fetchEntitlementsFromServer(Customer customer) async {
     final config = _configuration!;
     final baseURL = config.options.baseURL ?? config.environment.baseURL;
-    final url = Uri.parse('$baseURL/v1/entitlements/${customer.externalId}');
+    final url = Uri.parse('$baseURL/entitlements/${customer.externalId}');
 
     _log('Fetching entitlements from server', LogLevel.debug);
 
