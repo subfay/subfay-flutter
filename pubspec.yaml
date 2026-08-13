@@ -1,5 +1,5 @@
-name: inapp_sdk
-description: Flutter SDK for InApp Platform entitlement management
+name: subfay
+description: Flutter SDK for Subfay entitlement management
 version: 1.0.0
 homepage: https://docs.subfay.com
 repository: https://github.com/subfay/subfay-flutter

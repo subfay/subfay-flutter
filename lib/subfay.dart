@@ -1,16 +1,16 @@
-library inapp_sdk;
+library subfay;
 
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// InApp Platform Flutter SDK
-class InAppSDK {
-  static InAppSDK? _instance;
-  static InAppSDK get instance => _instance ??= InAppSDK._();
+/// Subfay Flutter SDK
+class Subfay {
+  static Subfay? _instance;
+  static Subfay get instance => _instance ??= Subfay._();
 
-  InAppSDK._();
+  Subfay._();
 
   Configuration? _configuration;
   Customer? _currentCustomer;
@@ -74,7 +74,7 @@ class InAppSDK {
 
     final customer = await getCurrentCustomer();
     if (customer == null) {
-      throw InAppException.authenticationError(
+      throw SubfayException.authenticationError(
         'No customer identified. Call identify() first.',
       );
     }
@@ -102,7 +102,7 @@ class InAppSDK {
 
     final customer = await getCurrentCustomer();
     if (customer == null) {
-      throw InAppException.authenticationError('No customer identified');
+      throw SubfayException.authenticationError('No customer identified');
     }
 
     return await _fetchEntitlementsFromServer(customer);
@@ -111,8 +111,8 @@ class InAppSDK {
   // Private methods
   void _ensureConfigured() {
     if (_configuration == null) {
-      throw InAppException.invalidConfiguration(
-        'SDK not configured. Call InAppSDK.instance.configure() first.',
+      throw SubfayException.invalidConfiguration(
+        'SDK not configured. Call Subfay.instance.configure() first.',
       );
     }
   }
@@ -130,12 +130,12 @@ class InAppSDK {
         headers: {
           'X-API-Key': config.apiKey,
           'Content-Type': 'application/json',
-          'User-Agent': 'InAppSDK/Flutter/1.0.0',
+          'User-Agent': 'Subfay/Flutter/1.0.0',
         },
       ).timeout(Duration(milliseconds: config.options.timeout));
 
       if (response.statusCode != 200) {
-        throw InAppException.serverError(
+        throw SubfayException.serverError(
           response.statusCode,
           'Server error: ${response.body}',
         );
@@ -155,42 +155,42 @@ class InAppSDK {
 
       return entitlements;
     } catch (e) {
-      throw InAppException.networkError('Network error: $e');
+      throw SubfayException.networkError('Network error: $e');
     }
   }
 
   // Cache management
   Future<void> _saveCustomer(Customer customer) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('inapp_customer', jsonEncode(customer.toJson()));
+    await prefs.setString('subfay_customer', jsonEncode(customer.toJson()));
   }
 
   Future<Customer?> _loadCustomer() async {
     final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString('inapp_customer');
+    final data = prefs.getString('subfay_customer');
     if (data == null) return null;
     return Customer.fromJson(jsonDecode(data));
   }
 
   Future<void> _saveEntitlements(List<String> entitlements) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('inapp_entitlements', jsonEncode(entitlements));
+    await prefs.setString('subfay_entitlements', jsonEncode(entitlements));
     await prefs.setInt(
-      'inapp_last_sync',
+      'subfay_last_sync',
       DateTime.now().millisecondsSinceEpoch,
     );
   }
 
   Future<List<String>?> _loadEntitlements() async {
     final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString('inapp_entitlements');
+    final data = prefs.getString('subfay_entitlements');
     if (data == null) return null;
     return List<String>.from(jsonDecode(data) as List);
   }
 
   Future<bool> _isCacheExpired() async {
     final prefs = await SharedPreferences.getInstance();
-    final lastSync = prefs.getInt('inapp_last_sync');
+    final lastSync = prefs.getInt('subfay_last_sync');
     if (lastSync == null) return true;
 
     final elapsed = DateTime.now().millisecondsSinceEpoch - lastSync;
@@ -199,9 +199,9 @@ class InAppSDK {
 
   Future<void> _clearAll() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('inapp_customer');
-    await prefs.remove('inapp_entitlements');
-    await prefs.remove('inapp_last_sync');
+    await prefs.remove('subfay_customer');
+    await prefs.remove('subfay_entitlements');
+    await prefs.remove('subfay_last_sync');
   }
 
   void _log(String message, LogLevel level) {
@@ -217,7 +217,7 @@ class InAppSDK {
       LogLevel.none: '',
     }[level];
 
-    print('$prefix [InAppSDK] $message');
+    print('$prefix [Subfay] $message');
   }
 }
 
@@ -285,9 +285,9 @@ enum Environment {
   String get baseURL {
     switch (this) {
       case Environment.production:
-        return 'https://api.inappplatform.com';
+        return 'https://api.subfay.com';
       case Environment.sandbox:
-        return 'https://sandbox-api.inappplatform.com';
+        return 'https://sandbox-api.subfay.com';
     }
   }
 }
@@ -302,33 +302,33 @@ enum LogLevel {
 }
 
 // Exceptions
-class InAppException implements Exception {
+class SubfayException implements Exception {
   final String message;
-  final InAppExceptionType type;
+  final SubfayExceptionType type;
   final int? statusCode;
 
-  InAppException._(this.message, this.type, [this.statusCode]);
+  SubfayException._(this.message, this.type, [this.statusCode]);
 
-  factory InAppException.networkError(String message) =>
-      InAppException._(message, InAppExceptionType.networkError);
+  factory SubfayException.networkError(String message) =>
+      SubfayException._(message, SubfayExceptionType.networkError);
 
-  factory InAppException.authenticationError(String message) =>
-      InAppException._(message, InAppExceptionType.authenticationError);
+  factory SubfayException.authenticationError(String message) =>
+      SubfayException._(message, SubfayExceptionType.authenticationError);
 
-  factory InAppException.invalidConfiguration(String message) =>
-      InAppException._(message, InAppExceptionType.invalidConfiguration);
+  factory SubfayException.invalidConfiguration(String message) =>
+      SubfayException._(message, SubfayExceptionType.invalidConfiguration);
 
-  factory InAppException.serverError(int statusCode, String message) =>
-      InAppException._(message, InAppExceptionType.serverError, statusCode);
+  factory SubfayException.serverError(int statusCode, String message) =>
+      SubfayException._(message, SubfayExceptionType.serverError, statusCode);
 
-  factory InAppException.cacheError(String message) =>
-      InAppException._(message, InAppExceptionType.cacheError);
+  factory SubfayException.cacheError(String message) =>
+      SubfayException._(message, SubfayExceptionType.cacheError);
 
   @override
-  String toString() => 'InAppException: $message';
+  String toString() => 'SubfayException: $message';
 }
 
-enum InAppExceptionType {
+enum SubfayExceptionType {
   networkError,
   authenticationError,
   invalidConfiguration,
