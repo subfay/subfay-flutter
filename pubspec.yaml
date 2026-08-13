@@ -1,9 +1,16 @@
 name: subfay
-description: Flutter SDK for Subfay entitlement management
+description: >-
+  Subfay Flutter SDK — subscriptions, in-app purchase entitlements and customer
+  identity for your Flutter app.
 version: 1.0.0
 homepage: https://docs.subfay.com
 repository: https://github.com/subfay/subfay-flutter
 issue_tracker: https://github.com/subfay/subfay-flutter/issues
+topics:
+  - subscriptions
+  - in-app-purchases
+  - entitlements
+  - iap
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
